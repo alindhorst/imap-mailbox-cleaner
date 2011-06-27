@@ -1,0 +1,10 @@
+Usage:
+
+java -jar IMAPMailboxCleaner [username] [password] [host] [port]
+
+Example:
+
+java -jar IMAPMailboxCleaner user pw mymailhost 25
+
+ will connect to the IMAP mailbox of user "user" with the password "pw" provided
+ by the IMAP server running on "mymailhost" listening to port 25.

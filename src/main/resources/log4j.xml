@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration
+PUBLIC "-//Log4j org.apache.log4j//DTD Configuration 1.2//EN"
+"log4j.dtd"
+>
+
+<!--
+    Document   : log4j.xml
+    Created on : 18.02.2011 10:07:14
+    Author     : alindhorst
+    Description:
+        Log4j xml configuration, logging to console
+-->
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+        <!--+
+            | ConversionCharacters:
+            |  c - category
+            |  C - class (performance!)
+            |  d - date
+            |  F - file name (performance!)
+            |  l - caller location (performance!)
+            |  L - caller line number (performance!)
+            |  m - message
+            |  M - method name (performance!)
+            |  n - new line
+            |  p - priority
+            |  r - ms
+            |  t - thread
+            |  x - NDC context
+            |  X - MDC
+            |  % - single percent
+            +-->
+            <param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c : %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="STDOUT" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="console"/>
+    </logger>
+    <logger name="ERROR" additivity="false">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+    </logger>
+    <logger name="DEBUG" additivity="false">
+        <level value="DEBUG"/>
+        <appender-ref ref="console"/>
+    </logger>
+
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="console"/>
+    </root>
+</log4j:configuration>
