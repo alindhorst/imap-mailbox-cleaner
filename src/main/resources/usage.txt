@@ -1,10 +1,11 @@
 Usage:
 
-java -jar IMAPMailboxCleaner [username] [password] [host] [port]
+java -jar IMAPMailboxCleaner [username] [password] [host] [port] [too old threshold in seconds]
 
 Example:
 
-java -jar IMAPMailboxCleaner user pw mymailhost 25
+java -jar IMAPMailboxCleaner user pw mymailhost 25 3600
 
  will connect to the IMAP mailbox of user "user" with the password "pw" provided
- by the IMAP server running on "mymailhost" listening to port 25.
+ by the IMAP server running on "mymailhost" listening to port 25. All messages
+ older than one hour (3600 seconds) will be expunged.

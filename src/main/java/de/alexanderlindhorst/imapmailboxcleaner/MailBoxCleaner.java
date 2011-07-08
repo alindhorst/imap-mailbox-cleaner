@@ -8,13 +8,10 @@ import de.alexanderlindhorst.imapmailboxcleaner.event.MessagesDeletedEvent;
 import de.alexanderlindhorst.imapmailboxcleaner.event.MessagesDeletedListener;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
 import javax.mail.Flags.Flag;
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -32,13 +29,14 @@ import org.slf4j.LoggerFactory;
 public class MailBoxCleaner implements Runnable {
 
     private static final int KILO = 1024;
+    private static final Logger DEBUG = LoggerFactory.getLogger("DEBUG");
     private static final Logger STDOUT = LoggerFactory.getLogger("STDOUT");
     private static final Logger ERROR = LoggerFactory.getLogger("ERROR");
     private static final int IMAP_PORT_DEFAULT = 143;
     private static final long DEFAULT_DELETABLE_THRESHOLD = 3 * 60 * 60 * 1000;
     private static final String IMAP_PROTOCOL = "imap";
     private static final int UPDATE_STEP_INTERVAL = 10;
-    private static final int WANTED_NUMBER_OF_PARAMS = 4;
+    private static final int WANTED_NUMBER_OF_PARAMS = 5;
     private String login;
     private String password;
     private String imapServerHost;
@@ -167,7 +165,9 @@ public class MailBoxCleaner implements Runnable {
         List<FolderInformation> folderInformations = new ArrayList<FolderInformation>(children.length);
         for (Folder folder : children) {
             FolderInformation info = buildFolderHierarchy(folder);
-            folderInformations.add(info);
+            if (info != null) { //null => error occured
+                folderInformations.add(info);
+            }
         }
         root = new FolderInformation(rootFolder, folderInformations, 0, 0);
     }
@@ -184,13 +184,20 @@ public class MailBoxCleaner implements Runnable {
             folder.open(Folder.READ_WRITE);
             fireFolderOpened(folder);
             for (Message message : messages) {
-                message.setFlag(Flag.DELETED, true);
-                folderInformation.doIncrementDeletedCount();
-                STDOUT.debug("Deleted message: {} - \"{}\"", folder.getFullName(), message.getSubject());
-                if (folderInformation.getDeletedCount() % UPDATE_STEP_INTERVAL == 0) { //fire updates in reasonable steps
-                    fireMessagesDeleted();
-                    folderInformation.getFolder().expunge();
+                try {
+                    message.setFlag(Flag.DELETED, true);
+                    folderInformation.doIncrementDeletedCount();
+                    DEBUG.debug("Deleted message: {} - \"{}\"", folder.getFullName(), message.getSubject());
+                    if (folderInformation.getDeletedCount() > 0 && folderInformation.getDeletedCount()
+                            % UPDATE_STEP_INTERVAL == 0) { //fire updates in reasonable steps
+                        fireMessagesDeleted();
+                        folderInformation.getFolder().expunge();
 
+                    }
+                } catch (Exception exception) {
+                    ERROR.error("Error while deleting message:{} - \"{}\"", folder.getFullName(), message.
+                            getSubject());
+                    ERROR.error("Error details: ", exception);
                 }
             }
             //fire at least once
@@ -208,18 +215,30 @@ public class MailBoxCleaner implements Runnable {
     }
 
     private FolderInformation buildFolderHierarchy(Folder folder) throws MessagingException {
-        List<FolderInformation> children = new ArrayList<FolderInformation>();
-        int messages = 0;
-        int tooOld = 0;
-        if (folder.exists()) {
-            messages = folder.getMessageCount();
-            STDOUT.info("Found {}  messages in folder '{}'", messages, folder.getName());
-            tooOld = getTooOldMessages(new Date(System.currentTimeMillis() - deletableThreshold), folder).length;
-            for (Folder childFolder : folder.list("*")) {
-                children.add(buildFolderHierarchy(childFolder));
+        DEBUG.debug("Building hierarchy for folder {}", folder.getFullName());
+        FolderInformation folderInformation = null;
+        try {
+            List<FolderInformation> children = new ArrayList<FolderInformation>();
+            int messages = 0;
+            int tooOld = 0;
+            if (folder.exists()) {
+                messages = folder.getMessageCount();
+                STDOUT.info("Found {}  messages in folder '{}'", messages, folder.getName());
+                tooOld =
+                        getTooOldMessages(new Date(System.currentTimeMillis() - deletableThreshold), folder).length;
+                for (Folder childFolder : folder.list("*")) {
+                    FolderInformation childFolderInformation = buildFolderHierarchy(childFolder);
+                    if (childFolderInformation != null) {
+                        children.add(childFolderInformation);
+                    }
+                }
             }
+            folderInformation = new FolderInformation(folder, children, messages, tooOld);
+        } catch (MessagingException messagingException) {
+            ERROR.error("Couldn't build hierarchy for " + folder.getFullName()
+                    + ", will skip it for the remaining parts of the process.", messagingException);
         }
-        return new FolderInformation(folder, children, messages, tooOld);
+        return folderInformation;
     }
 
     private Message[] getTooOldMessages(Date thresholdDate, Folder folder) throws MessagingException {
@@ -323,7 +342,8 @@ public class MailBoxCleaner implements Runnable {
             printUsage();
         } else {
             try {
-                MailBoxCleaner cleaner = new MailBoxCleaner(args[0], args[1], args[2], Integer.parseInt(args[3])); //NOSONAR
+                MailBoxCleaner cleaner = new MailBoxCleaner(args[0], args[1], args[2], Integer.parseInt(args[3]), Long.
+                        parseLong(args[4]) * 1000); //NOSONAR
                 Thread t = new Thread(cleaner);
                 t.start();
             } catch (Exception exception) {
