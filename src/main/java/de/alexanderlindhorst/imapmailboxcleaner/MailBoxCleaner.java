@@ -28,12 +28,12 @@ import org.slf4j.LoggerFactory;
  */
 public class MailBoxCleaner implements Runnable {
 
+    public static final long DEFAULT_DELETABLE_THRESHOLD = 3 * 60 * 60 * 1000;
     private static final int KILO = 1024;
     private static final Logger DEBUG = LoggerFactory.getLogger("DEBUG");
     private static final Logger STDOUT = LoggerFactory.getLogger("STDOUT");
     private static final Logger ERROR = LoggerFactory.getLogger("ERROR");
     private static final int IMAP_PORT_DEFAULT = 143;
-    private static final long DEFAULT_DELETABLE_THRESHOLD = 3 * 60 * 60 * 1000;
     private static final String IMAP_PROTOCOL = "imap";
     private static final int UPDATE_STEP_INTERVAL = 10;
     private static final int WANTED_NUMBER_OF_PARAMS = 5;

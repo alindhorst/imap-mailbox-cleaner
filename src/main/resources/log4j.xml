@@ -44,10 +44,10 @@ PUBLIC "-//Log4j org.apache.log4j//DTD Configuration 1.2//EN"
         <level value="WARN"/>
         <appender-ref ref="console"/>
     </logger>
-    <logger name="DEBUG" additivity="false">
+    <!-- <logger name="DEBUG" additivity="false">
         <level value="DEBUG"/>
         <appender-ref ref="console"/>
-    </logger>
+    </logger>-->
 
     <root>
         <level value="INFO"/>

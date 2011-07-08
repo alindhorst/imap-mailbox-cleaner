@@ -56,6 +56,8 @@ public class MailBoxCleanerGUI extends javax.swing.JFrame implements FolderStatu
         usernameField = new javax.swing.JTextField();
         javax.swing.JLabel passwordFieldLabel = new javax.swing.JLabel();
         passwordField = new javax.swing.JPasswordField();
+        javax.swing.JLabel thresholdFiledLabel = new javax.swing.JLabel();
+        thresholdField = new javax.swing.JTextField();
         javax.swing.JPanel actionPane = new javax.swing.JPanel();
         javax.swing.JPanel innerActionPane = new javax.swing.JPanel();
         cleanUpButton = new javax.swing.JButton();
@@ -162,9 +164,23 @@ public class MailBoxCleanerGUI extends javax.swing.JFrame implements FolderStatu
         gridBagConstraints.weightx = 2.0;
         connectionPane.add(passwordField, gridBagConstraints);
 
+        thresholdFiledLabel.setText("Threshold in sec.:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        connectionPane.add(thresholdFiledLabel, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        connectionPane.add(thresholdField, gridBagConstraints);
+
         actionPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        innerActionPane.setLayout(new java.awt.GridLayout());
+        innerActionPane.setLayout(new java.awt.GridLayout(1, 0));
 
         cleanUpButton.setMnemonic('c');
         cleanUpButton.setText("Clean Up Mailbox");
@@ -252,7 +268,9 @@ public class MailBoxCleanerGUI extends javax.swing.JFrame implements FolderStatu
             String port = portField.getText();
             String username = usernameField.getText();
             String password = String.valueOf(passwordField.getPassword());
-            mailBoxCleaner = new MailBoxCleaner(username, password, host, Integer.parseInt(port));
+            long threshold = thresholdField.getText() != null ? 
+                Long.parseLong(thresholdField.getText()) * 1000 : MailBoxCleaner.DEFAULT_DELETABLE_THRESHOLD;
+            mailBoxCleaner = new MailBoxCleaner(username, password, host, Integer.parseInt(port), threshold);
             progressBar.setEnabled(true);
             progressBar.setString("Getting message count ...");
             progressBar.setEnabled(true);
@@ -312,6 +330,7 @@ public class MailBoxCleanerGUI extends javax.swing.JFrame implements FolderStatu
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JLabel progressBarLabel;
     private javax.swing.JButton stopButton;
+    private javax.swing.JTextField thresholdField;
     private javax.swing.JTextField usernameField;
     // End of variables declaration//GEN-END:variables
 
